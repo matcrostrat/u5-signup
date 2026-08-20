@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>U5 Soccer Clinic - Team Sign-Up Sheet</title>
+<title>U5 Soccer Clinic - Team Sign-Up Sheet and Schedule</title>
 <style>
   :root {
     --pitch-green: #1f5c3f;
@@ -146,6 +146,53 @@
     border-top: 1px dashed var(--chalk-line);
   }
   .loading { padding: 40px; text-align: center; color: var(--ink-soft); font-size: 13px; }
+  .schedule-block {
+    margin-bottom: 18px;
+    border: 1px solid var(--chalk-line);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--open-slot);
+  }
+  .schedule-block-title {
+    background: var(--chalk-line);
+    font-size: 11.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--pitch-green-dark);
+    padding: 7px 12px;
+  }
+  .schedule-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--chalk-line);
+    font-size: 12.5px;
+  }
+  .schedule-row:first-of-type { border-top: none; }
+  .schedule-row.flagged { background: #fdf3ee; }
+  .schedule-date {
+    font-weight: 700;
+    min-width: 130px;
+  }
+  .schedule-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    color: var(--ink-soft);
+  }
+  .schedule-time {
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .schedule-flag {
+    font-weight: 700;
+    color: var(--clay);
+    white-space: nowrap;
+  }
   .error-banner {
     background: #fdecea;
     color: #92221a;
@@ -202,6 +249,19 @@ function render() {
     ? `<div class="error-banner">${escapeHtml(errorMsg)}</div>`
     : "";
 
+  const scheduleRows = games.map(g => {
+    const isSub = subGames.includes(g.key);
+    return `
+      <div class="schedule-row${isSub ? " flagged" : ""}">
+        <div class="schedule-date">${g.label}</div>
+        <div class="schedule-details">
+          <span class="schedule-time">10:15 AM</span>
+          <span class="schedule-place">Annapolis Middle School, 1299 Forest Drive, Annapolis, MD 21403</span>
+          ${isSub ? '<span class="schedule-flag">Substitute coach needed</span>' : ""}
+        </div>
+      </div>`;
+  }).join("");
+
   const snackCards = games.map(g => {
     const name = snackSignups[g.key];
     if (name) {
@@ -242,7 +302,7 @@ function render() {
   root.innerHTML = `
     <div class="header">
       <p class="eyebrow">U5 Soccer Clinic · Fall Season</p>
-      <h1 class="title">Team Sign-Up Sheet</h1>
+      <h1 class="title">Team Sign-Up Sheet and Schedule</h1>
       <p class="subtitle">Game day snacks and substitute coaching, Sep 12 through Oct 31</p>
     </div>
     <div class="body-wrap">
@@ -254,6 +314,25 @@ function render() {
       <p class="section-label">Game Day Snacks</p>
       <p class="section-hint">One family per game, 8 games total. Snacks needed for games only, not practices.</p>
       <div class="slot-grid">${snackCards}</div>
+
+      <p class="section-label">Full Season Schedule</p>
+      <p class="section-hint">Practices run weekly; opponents for each game will be confirmed two weeks before the season starts.</p>
+
+      <div class="schedule-block">
+        <div class="schedule-block-title">Practices</div>
+        <div class="schedule-row">
+          <div class="schedule-date">Mondays, Sep 7 – Oct 26</div>
+          <div class="schedule-details">
+            <span class="schedule-time">5:00 – 6:00 PM</span>
+            <span class="schedule-place">Annapolis Sports Complex, 291 Locust Ave, Annapolis, MD 21401 (fields adjacent to Studio 39)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="schedule-block">
+        <div class="schedule-block-title">Games</div>
+        ${scheduleRows}
+      </div>
 
       <p class="footer-note">Sign-ups are shared with the whole team and update live. Games are at 10:15 AM at Annapolis Middle School, 1299 Forest Drive, Annapolis, MD 21403.</p>
     </div>
