@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>U5 Soccer Clinic - Team Sign-Up Sheet and Schedule</title>
+<style>
+  :root {
+    --pitch-green: #1f5c3f;
+    --pitch-green-dark: #143d2a;
+    --chalk: #f6f4ec;
+    --chalk-line: #e2ded0;
+    --clay: #c86a3a;
+    --ink: #1c231f;
+    --ink-soft: #5c6a5f;
+    --open-slot: #ffffff;
+    --filled-slot: #e9f3ec;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--chalk);
+    margin: 0;
+    padding: 24px 12px;
+  }
+  #root {
+    font-family: 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+    color: var(--ink);
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .header {
+    background: linear-gradient(135deg, var(--pitch-green) 0%, var(--pitch-green-dark) 100%);
+    color: var(--chalk);
+    padding: 28px 24px;
+    border-radius: 14px 14px 0 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: "";
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 160px;
+    height: 160px;
+    border: 3px solid rgba(246,244,236,0.15);
+    border-radius: 50%;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--clay);
+    margin: 0 0 6px 0;
+  }
+  .title {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-size: 13.5px;
+    color: rgba(246,244,236,0.85);
+    margin: 0;
+  }
+  .body-wrap {
+    background: var(--chalk);
+    border-radius: 0 0 14px 14px;
+    padding: 24px;
+    border: 1px solid var(--chalk-line);
+    border-top: none;
+  }
+  .section-label {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--pitch-green-dark);
+    margin: 28px 0 4px 0;
+  }
+  .section-label:first-child { margin-top: 0; }
+  .section-hint {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin: 0 0 14px 0;
+  }
+  .slot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+    gap: 10px;
+  }
+  .slot-card {
+    background: var(--open-slot);
+    border: 1.5px solid var(--chalk-line);
+    border-radius: 10px;
+    padding: 12px;
+    transition: border-color 0.15s ease;
+  }
+  .slot-card.filled {
+    background: var(--filled-slot);
+    border-color: var(--pitch-green);
+  }
+  .slot-card.sub-needed {
+    border-color: var(--clay);
+  }
+  .slot-date {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+  }
+  .slot-name {
+    font-size: 12.5px;
+    color: var(--pitch-green-dark);
+    font-weight: 700;
+    margin: 0 0 6px 0;
+  }
+  .slot-input {
+    width: 100%;
+    font-size: 12.5px;
+    padding: 6px 8px;
+    border: 1px solid var(--chalk-line);
+    border-radius: 6px;
+    font-family: inherit;
+  }
+  .slot-btn {
+    width: 100%;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-claim { background: var(--pitch-green); color: white; }
+  .btn-claim:hover { background: var(--pitch-green-dark); }
+  .btn-clear { background: transparent; color: var(--ink-soft); border: 1px solid var(--chalk-line); }
+  .btn-clear:hover { color: var(--clay); border-color: var(--clay); }
+  .footer-note {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--chalk-line);
+  }
+  .loading { padding: 40px; text-align: center; color: var(--ink-soft); font-size: 13px; }
+  .schedule-block {
+    margin-bottom: 18px;
+    border: 1px solid var(--chalk-line);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--open-slot);
+  }
+  .schedule-block-title {
+    background: var(--chalk-line);
+    font-size: 11.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--pitch-green-dark);
+    padding: 7px 12px;
+  }
+  .schedule-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--chalk-line);
+    font-size: 12.5px;
+  }
+  .schedule-row:first-of-type { border-top: none; }
+  .schedule-row.flagged { background: #fdf3ee; }
+  .schedule-date {
+    font-weight: 700;
+    min-width: 130px;
+  }
+  .schedule-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    color: var(--ink-soft);
+  }
+  .schedule-time {
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .schedule-flag {
+    font-weight: 700;
+    color: var(--clay);
+    white-space: nowrap;
+  }
+  .error-banner {
+    background: #fdecea;
+    color: #92221a;
+    border: 1px solid #f3c6c1;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">Loading sign-up sheet...</div></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPABASE_URL = "https://kvdhvyzvgoknwlpmrdjk.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2ZGh2eXp2Z29rbndscG1yZGprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxODQ2MzEsImV4cCI6MjEwMjc2MDYzMX0.U7PpqE--MCNUI3J7unEgWMZ3Yf9CAoORHi__0ddazok";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const games = [
+  { key: "2026-09-12", label: "Sat, Sep 12" },
+  { key: "2026-09-19", label: "Sat, Sep 19" },
+  { key: "2026-09-26", label: "Sat, Sep 26" },
+  { key: "2026-10-03", label: "Sat, Oct 3" },
+  { key: "2026-10-10", label: "Sat, Oct 10" },
+  { key: "2026-10-17", label: "Sat, Oct 17" },
+  { key: "2026-10-24", label: "Sat, Oct 24" },
+  { key: "2026-10-31", label: "Sat, Oct 31" }
+];
+const subGames = ["2026-09-19", "2026-10-03"];
+
+const root = document.getElementById("root");
+let snackSignups = {};
+let subSignups = {};
+let loaded = false;
+let errorMsg = "";
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function render() {
+  if (!loaded) {
+    root.innerHTML = '<div class="loading">Loading sign-up sheet...</div>';
+    return;
+  }
+
+  const errorBanner = errorMsg
+    ? `<div class="error-banner">${escapeHtml(errorMsg)}</div>`
+    : "";
+
+  const scheduleRows = games.map(g => {
+    const isSub = subGames.includes(g.key);
+    return `
+      <div class="schedule-row${isSub ? " flagged" : ""}">
+        <div class="schedule-date">${g.label}</div>
+        <div class="schedule-details">
+          <span class="schedule-time">10:15 AM</span>
+          <span class="schedule-place">Annapolis Middle School, 1299 Forest Drive, Annapolis, MD 21403</span>
+          ${isSub ? '<span class="schedule-flag">Substitute coach needed</span>' : ""}
+        </div>
+      </div>`;
+  }).join("");
+
+  const snackCards = games.map(g => {
+    const name = snackSignups[g.key];
+    if (name) {
+      return `
+        <div class="slot-card filled">
+          <p class="slot-date">${g.label}</p>
+          <p class="slot-name">✓ ${escapeHtml(name)}</p>
+          <button class="slot-btn btn-clear" data-action="clear-snack" data-key="${g.key}">Remove</button>
+        </div>`;
+    }
+    return `
+      <div class="slot-card">
+        <p class="slot-date">${g.label}</p>
+        <input class="slot-input" type="text" placeholder="Your name" data-input="snack" data-key="${g.key}" />
+        <button class="slot-btn btn-claim" data-action="claim-snack" data-key="${g.key}">Sign up</button>
+      </div>`;
+  }).join("");
+
+  const subCards = subGames.map(key => {
+    const g = games.find(x => x.key === key);
+    const name = subSignups[key];
+    if (name) {
+      return `
+        <div class="slot-card filled">
+          <p class="slot-date">${g.label}</p>
+          <p class="slot-name">✓ ${escapeHtml(name)}</p>
+          <button class="slot-btn btn-clear" data-action="clear-sub" data-key="${key}">Remove</button>
+        </div>`;
+    }
+    return `
+      <div class="slot-card sub-needed">
+        <p class="slot-date">${g.label}</p>
+        <input class="slot-input" type="text" placeholder="Your name" data-input="sub" data-key="${key}" />
+        <button class="slot-btn btn-claim" data-action="claim-sub" data-key="${key}">I'll coach</button>
+      </div>`;
+  }).join("");
+
+  root.innerHTML = `
+    <div class="header">
+      <p class="eyebrow">U5 Soccer Clinic · Fall Season</p>
+      <h1 class="title">Team Sign-Up Sheet and Schedule</h1>
+      <p class="subtitle">Game day snacks and substitute coaching, Sep 12 through Oct 31</p>
+    </div>
+    <div class="body-wrap">
+      ${errorBanner}
+      <p class="section-label">Substitute Coach Needed</p>
+      <p class="section-hint">Head coach cannot attend these two games. Please sign up if you can step in.</p>
+      <div class="slot-grid">${subCards}</div>
+
+      <p class="section-label">Game Day Snacks</p>
+      <p class="section-hint">One family per game, 8 games total. Snacks needed for games only, not practices.</p>
+      <div class="slot-grid">${snackCards}</div>
+
+      <p class="section-label">Full Season Schedule</p>
+      <p class="section-hint">Practices run weekly; opponents for each game will be confirmed two weeks before the season starts.</p>
+
+      <div class="schedule-block">
+        <div class="schedule-block-title">Practices</div>
+        <div class="schedule-row">
+          <div class="schedule-date">Mondays, Sep 7 – Oct 26</div>
+          <div class="schedule-details">
+            <span class="schedule-time">5:00 – 6:00 PM</span>
+            <span class="schedule-place">Annapolis Sports Complex, 291 Locust Ave, Annapolis, MD 21401 (fields adjacent to Studio 39)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="schedule-block">
+        <div class="schedule-block-title">Games</div>
+        ${scheduleRows}
+      </div>
+
+      <p class="footer-note">Sign-ups are shared with the whole team and update live. Games are at 10:15 AM at Annapolis Middle School, 1299 Forest Drive, Annapolis, MD 21403.</p>
+    </div>
+  `;
+  attachHandlers();
+}
+
+function attachHandlers() {
+  root.querySelectorAll('[data-action="claim-snack"]').forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const key = btn.dataset.key;
+      const input = root.querySelector(`[data-input="snack"][data-key="${key}"]`);
+      const name = (input.value || "").trim();
+      if (!name) { input.focus(); return; }
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+      const { error } = await supabase
+        .from("signups")
+        .insert({ slot_type: "snack", game_date: key, name });
+      if (error) {
+        errorMsg = "That slot was just taken, or something went wrong. Refreshing...";
+        await loadAll();
+        return;
+      }
+      snackSignups[key] = name;
+      errorMsg = "";
+      render();
+    });
+  });
+
+  root.querySelectorAll('[data-action="clear-snack"]').forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const key = btn.dataset.key;
+      if (!confirm("Remove this snack sign-up?")) return;
+      const { error } = await supabase
+        .from("signups")
+        .delete()
+        .eq("slot_type", "snack")
+        .eq("game_date", key);
+      if (error) {
+        errorMsg = "Could not remove, please try again.";
+      } else {
+        delete snackSignups[key];
+        errorMsg = "";
+      }
+      render();
+    });
+  });
+
+  root.querySelectorAll('[data-action="claim-sub"]').forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const key = btn.dataset.key;
+      const input = root.querySelector(`[data-input="sub"][data-key="${key}"]`);
+      const name = (input.value || "").trim();
+      if (!name) { input.focus(); return; }
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+      const { error } = await supabase
+        .from("signups")
+        .insert({ slot_type: "subcoach", game_date: key, name });
+      if (error) {
+        errorMsg = "That slot was just taken, or something went wrong. Refreshing...";
+        await loadAll();
+        return;
+      }
+      subSignups[key] = name;
+      errorMsg = "";
+      render();
+    });
+  });
+
+  root.querySelectorAll('[data-action="clear-sub"]').forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const key = btn.dataset.key;
+      if (!confirm("Remove this substitute coach sign-up?")) return;
+      const { error } = await supabase
+        .from("signups")
+        .delete()
+        .eq("slot_type", "subcoach")
+        .eq("game_date", key);
+      if (error) {
+        errorMsg = "Could not remove, please try again.";
+      } else {
+        delete subSignups[key];
+        errorMsg = "";
+      }
+      render();
+    });
+  });
+}
+
+async function loadAll() {
+  const { data, error } = await supabase.from("signups").select("*");
+  if (error) {
+    errorMsg = "Could not load sign-ups. Check back in a moment.";
+    loaded = true;
+    render();
+    return;
+  }
+  snackSignups = {};
+  subSignups = {};
+  (data || []).forEach(row => {
+    if (row.slot_type === "snack") snackSignups[row.game_date] = row.name;
+    if (row.slot_type === "subcoach") subSignups[row.game_date] = row.name;
+  });
+  loaded = true;
+  render();
+}
+
+loadAll();
+</script>
+</body>
+</html>
